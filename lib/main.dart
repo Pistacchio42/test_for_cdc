@@ -77,7 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         String s = new String.fromCharCodes(event); /// <-molto importante
         update="$s";
-        serialData.add(Text(s));
+        if(event.isNotEmpty) ///controllo dell'event che non sia vuoto
+          serialData.add(Text(s));
       });
     });
 
