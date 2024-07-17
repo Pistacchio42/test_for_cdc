@@ -36,18 +36,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String update = "";
+  List<Widget> serialData = [];
 
-    String update="";
-    List<Widget> serialData=[];
-    //controlla che non siano nulli; va messa fuori per fare la chiusura al termine della app
-    UsbPort? port;
+  //controlla che non siano nulli; va messa fuori per fare la chiusura al termine della app
+  UsbPort? port;
 
   Future<void> read() async {
     //lista tutti i devices che ci sono
     List<UsbDevice> devices = await UsbSerial.listDevices();
 
-    //controlla che nn siano nulli
-    UsbPort? port;
     if (devices.length == 0) {
       return;
     }
@@ -57,27 +55,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
     //apri la/e porta/e
     bool openResult = await port!.open();
-    if ( !openResult ) {
+    if (!openResult) {
       print("Failed to open");
       return;
     }
 
-    await port.setDTR(true);
-    await port.setRTS(true);
+    await port!.setDTR(true);
+    await port!.setRTS(true);
 
     //questi sono i parametri di lettura delle porte COM/CDM, si può cambiare qui o direttamente dal dispositivo
-    port.setPortParameters(115200, UsbPort.DATABITS_8,
-        UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
+    port!.setPortParameters(
+        115200, UsbPort.DATABITS_8, UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
 
-    await port.write(Uint8List.fromList([0x01, 0x54, 0x04]));
+    await port!.write(Uint8List.fromList([0x01, 0x54, 0x04]));
 
     //leggi dalla porta e fai una traduzione da Uint8List a Stringa in questo caso
-    port.inputStream!.listen((Uint8List event) {
+    port!.inputStream!.listen((Uint8List event) {
       print(event);
       setState(() {
-        String s = new String.fromCharCodes(event); /// <-molto importante
-        update="$s";
-        if(event.isNotEmpty) ///controllo dell'event che non sia vuoto
+        String s = new String.fromCharCodes(event);
+
+        /// <-molto importante
+        update = "$s";
+        if (event.isNotEmpty)
+
+          ///controllo dell'event che non sia vuoto
           serialData.add(Text(s));
       });
     });
@@ -87,13 +89,18 @@ class _MyHomePageState extends State<MyHomePage> {
     //questi numeri sono esadecimali per istruzioni al dispositivo com; riferite al dispositivo 0x1EAB/0x1D06: NewLand;
   }
 
-
-    @override
-    void dispose() {
-      super.dispose();
+  @override
+  void dispose() {
+    super.dispose();
     //chiusura della porta
-      port!.close();
-    }
+    port!.close();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    read();
+  }
 
   @override
   Widget build(BuildContext context) {
